@@ -1,4 +1,4 @@
-- 👋 Hi, I’m @zhousandie
+- 👋 Hi, I’m @zhouyidie
 - 👀 I’m interested in C/C++ programming language learning。
 - 🌱 I’m currently learning data structures and algorithms》
 - 💞️ I’m looking to collaborate on other students.
