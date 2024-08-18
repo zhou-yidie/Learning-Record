@@ -1,4 +1,4 @@
-#pragma GCC optimize(2)
+. #pragma GCC optimize(2)
 #include<bits/stdc++.h>
 #define FASTER ios::sync_with_stdio(false);cin.tie(0);cout.tie(0);
 #define rep(x,y,z) for(int x=(y);x<=(z);x++)
