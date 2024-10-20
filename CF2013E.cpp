@@ -19,7 +19,7 @@ int AC(){
 
 	now=a[1];
 	for(int i=2;i<=n;i++)
-		now=gcd(now,a[i]);
+		now=__gcd(now,a[i]);
 
 	ans=1ll*now*n+(a[1]-now);
 
@@ -28,7 +28,7 @@ int AC(){
 	while (true){
 		now=inf;
 		for(int i=1;i<=n;i++)
-			now=min(now,gcd(lst,a[i]));
+			now=min(now,__gcd(lst,a[i]));
 
 		lst=now;
 		ans+=lst-tmp;
