@@ -1,0 +1,9 @@
+//#include<bits/stdc++.h>
+#include<iostream>
+#include<queue>
+using namespace std;
+
+int main() {
+	cout << "板栗王注意身体！\n";
+	return 0;
+}
