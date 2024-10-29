@@ -73,11 +73,7 @@ void AC() {
         }
 
 
-//        cout << tmp.first << "   %  " << sz << " " << ans << '\n';
-//        for (auto v : tmp.second) {
-//            cout << v << " " ;
-//        }
-//        cout << '\n';
+
     }
     if (fg) cout << "-1\n";
     else cout << ans << '\n';
