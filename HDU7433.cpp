@@ -24,7 +24,7 @@ ULL get1(int l , int r) {
 
 void AC() {
     string a , b ; cin >> a >> b ;
-    int lena = a.size() , lenb = b.size() ;
+    int lena = (int)a.size() , lenb = b.size() ;
     a = " " + a + a;
     b = " " + b ;
     map<ULL , int> mp;
@@ -32,7 +32,7 @@ void AC() {
     for (int i = 1 ; i <= lena*2; i++ ){
         h[i] = h[i-1] * P + a[i];
     }
-    for (int i = 1; i+lena-1 < a.size(); i++) {
+    for (int i = 1; i-1 <= lena; i++) {
         mp[ get(i,i+lena-1) ] = 1;
     }
     for (int i = 1 ; i <= lenb ; i++ ) {
