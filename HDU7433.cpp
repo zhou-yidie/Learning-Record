@@ -32,7 +32,7 @@ void AC() {
     for (int i = 1 ; i <= lena*2; i++ ){
         h[i] = h[i-1] * P + a[i];
     }
-    for (int i = 1; i-1 <= lena; i++) {
+    for (int i = 1; i-1 <= (int)lena; i++) {
         mp[ get(i,i+lena-1) ] = 1;
     }
     for (int i = 1 ; i <= lenb ; i++ ) {
