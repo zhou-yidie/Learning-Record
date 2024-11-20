@@ -12,6 +12,7 @@ int len( node &r ) {
     return r.r - r.l + 1 ;
 }
 
+
 void pushup( int u ) {
     int Llen = len( tr[ u << 1 ]) , Rlen = len(tr[ u << 1 | 1 ]) ;
     auto &L = tr[ u << 1 ] , &R = tr[ u << 1 | 1 ] , &RT = tr[ u ] ;
