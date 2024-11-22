@@ -2,6 +2,10 @@
 using namespace std;
 const int maxn=2e5;
 int n,a[maxn+5],tag1[maxn+5],tag2[maxn+5]; 
+
+
+
+// 烤鱼
 signed main(){
 	ios::sync_with_stdio(0);
 	cin.tie(0);
