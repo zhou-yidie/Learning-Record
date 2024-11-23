@@ -30,6 +30,6 @@ int main()
         if(i==2020)
             cout<<*it<<endl;
     }
-
+    cout << "\n\n\n";
     return 0;
 }
