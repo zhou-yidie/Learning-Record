@@ -1,43 +1,24 @@
 #include<bits/stdc++.h>
 using namespace std;
-typedef long long LL ;
-typedef pair<int,int> pii;
-const int N = 2e5+50 , mod = 1e9+7;
-
-bool fg = false;
-LL l ,r  ;
-bool vis[10010];
-void dfs(int cur_x ,  int pos ) {
-    bool tp = false;
-    // if (cur_x > r) {
-    //     if (pos == 0) {
-    //         fg = true;
-    //     }
-    //     return ;
-    // }
-    for (int i = cur_x ; i <= r ; i+=cur_x) {
-        if (!vis[i] && i % cur_x == 0) {
-            vis[i] = true;
-            tp = true;
-            dfs(cur_x+1,1-pos);
-            vis[i] = false;
-        }
+#define LL long long
+const LL maxn=220000,inf=1LL<<62;
+LL n=8,b[maxn]={},c[maxn]={};
+struct team{
+    string s;LL x;
+}a[maxn];
+int main(){
+    ios::sync_with_stdio(0);
+    cin.tie(0);cout.tie(0);
+    for(LL i=1;i<=n;i++)cin>>a[i].s>>a[i].x;
+    for(LL i=1;i<=4;i++){
+        if(a[2*i-1].x>a[2*i].x)b[i]=2*i-1;
+        else b[i]=2*i;
     }
-    if (!tp && pos == 1) {
-        fg = true;
+    for(LL i=1;i<=2;i++){
+        if(a[b[2*i-1]].x>a[b[2*i]].x)c[i]=b[2*i-1];
+        else c[i]=b[2*i];
     }
-}
-
-void AC() {
-    
-}
-
-int main() {
-    ios::sync_with_stdio(false); cin.tie(nullptr); cout.tie(nullptr);
-    int T = 1 ;
-    cin >> T ;
-    while (T--) {
-        AC();
-    }
+    if(a[c[1]].x<a[c[2]].x)swap(c[1],c[2]);
+    cout<<a[c[1]].s<<" beats "<<a[c[2]].s;
     return 0;
 }
