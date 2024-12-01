@@ -1,3 +1,4 @@
+ n
 class Solution 
 {
 private:
