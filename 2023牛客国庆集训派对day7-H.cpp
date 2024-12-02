@@ -21,6 +21,7 @@ int main(){
         ll a=n-1;
         if(i>a) break;
         j=min((a)/(a/i),m);
+        
 //        cout << "i = " << i << " j = " << j   << " sum =  " << (j-i+1)*(a/i) << endl;
         ans = (ans + (j - i + 1) * ( a / i )) % mod;
     }
