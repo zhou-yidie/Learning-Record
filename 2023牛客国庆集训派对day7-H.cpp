@@ -16,6 +16,7 @@ int main(){
 //        cout << "i = " << i << " j = " << j << " sum =  " << (j-i+1)*(a/i) << endl;
         ans = (ans+(j-i+1)*(a/i))%mod;
     }
+    
     for(i=2;i<=m;i=j+1)
     {
         ll a=n-1;
