@@ -28,6 +28,7 @@ void AC() {
         cout << "Yes\n";
     }
     return ;
+    // today,xiyousuanfajiaoliuqun naomale
 }
 
 int main() {
