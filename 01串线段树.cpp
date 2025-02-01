@@ -116,7 +116,7 @@ int main(  ) {
             cout << min( res.v0 , res.v1 ) << '\n';
         }
     }
-    return 0 ;
+    return 0;
 }
 
 
