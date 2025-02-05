@@ -30,5 +30,6 @@ public:
         return dummy->next;
     }
     // yijiumeishangban
+    // lianche
 };
 
