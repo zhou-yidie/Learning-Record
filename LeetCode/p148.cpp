@@ -73,3 +73,66 @@ public:
 };
 
 // 神仙题
+
+
+
+
+
+// 神仙题简化版
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode() : val(0), next(nullptr) {}
+ *     ListNode(int x) : val(x), next(nullptr) {}
+ *     ListNode(int x, ListNode *next) : val(x), next(next) {}
+ * };
+ */
+class Solution {
+public:
+    ListNode* merge(ListNode* l_node, ListNode* r_node) {
+        ListNode* head = new ListNode();
+        ListNode *tmp = head;
+
+        while (l_node != nullptr && r_node != nullptr) {
+            if (l_node->val < r_node->val) {
+                tmp->next = l_node;
+                l_node = l_node->next;
+            } else {
+                tmp->next = r_node;
+                r_node = r_node->next;
+            }
+            tmp = tmp->next;
+        }
+        if (l_node) {
+            tmp->next = l_node;
+            l_node = l_node->next;
+            tmp = tmp->next;
+        }
+        if (r_node) {
+            tmp->next = r_node;
+            r_node = r_node->next;
+            tmp = tmp->next;
+        }
+        return head->next;
+    }
+
+    ListNode* sortList(ListNode* head) {
+        if (!head || !head->next) return head;
+
+        ListNode *slow = head, *fast = head->next;
+        while (fast->next) {
+            slow = slow->next;
+            fast = fast->next->next;
+            if (!fast) break;
+        }
+        ListNode *list1 = slow->next;
+        slow->next = nullptr;
+        ListNode* left = sortList(head);
+        ListNode* right = sortList(list1);
+        ListNode* ans = merge(left, right);
+
+        return ans;
+    }
+};
