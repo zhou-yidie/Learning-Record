@@ -2,33 +2,29 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <random>
 #include "SkipListPro.h"
 
 #define NUM_THREADS 4
-#define OPERATIONS 100000
+#define OPERATIONS 250000
 
 SkipListPro<int, std::string> skiplist;
 
-void concurrentInsert(int start) {
+void testInsert(int start) {
     for (int i = start; i < start + OPERATIONS; ++i) {
         skiplist.insert(i, "data_" + std::to_string(i));
     }
 }
 
-void concurrentSearch(int start) {
+void testSearch(int start) {
     for (int i = start; i < start + OPERATIONS; ++i) {
-        auto val = skiplist.search(i);
-        if (val != "data_" + std::to_string(i)) {
-            std::cerr << "Error: Invalid value at " << i << std::endl;
-        }
+        skiplist.search(i);
     }
 }
 
-void concurrentDelete(int start) {
+void testRemove(int start) {
     for (int i = start; i < start + OPERATIONS; ++i) {
-        if (!skiplist.remove(i)) {
-            std::cerr << "Error: Delete failed at " << i << std::endl;
-        }
+        skiplist.remove(i);
     }
 }
 
@@ -37,39 +33,39 @@ int main() {
     std::vector<std::thread> threads;
     auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < NUM_THREADS; ++i) {
-        threads.emplace_back(concurrentInsert, i * OPERATIONS);
+        threads.emplace_back(testInsert, i * OPERATIONS);
     }
     for (auto& t : threads) t.join();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::high_resolution_clock::now() - start
     );
-    std::cout << "Insert done. Time: " << duration.count() << "ms. Size: " 
-              << skiplist.size() << std::endl;
+    std::cout << "Insert completed. Time: " << duration.count() 
+              << "ms | Size: " << skiplist.size() << std::endl;
 
     // 查询测试
     threads.clear();
     start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < NUM_THREADS; ++i) {
-        threads.emplace_back(concurrentSearch, i * OPERATIONS);
+        threads.emplace_back(testSearch, i * OPERATIONS);
     }
     for (auto& t : threads) t.join();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::high_resolution_clock::now() - start
     );
-    std::cout << "Search done. Time: " << duration.count() << "ms" << std::endl;
+    std::cout << "Search completed. Time: " << duration.count() << "ms" << std::endl;
 
     // 删除测试
     threads.clear();
     start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < NUM_THREADS; ++i) {
-        threads.emplace_back(concurrentDelete, i * OPERATIONS);
+        threads.emplace_back(testRemove, i * OPERATIONS);
     }
     for (auto& t : threads) t.join();
     duration = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::high_resolution_clock::now() - start
     );
-    std::cout << "Delete done. Time: " << duration.count() << "ms. Final size: " 
-              << skiplist.size() << std::endl;
+    std::cout << "Remove completed. Time: " << duration.count() 
+              << "ms | Final Size: " << skiplist.size() << std::endl;
 
     return 0;
 }

@@ -11,13 +11,13 @@
 #define MAX_LEVEL 16
 
 template<typename K, typename V>
-class SkipList {
+class SkipListPro {
 public:
-    SkipList(K footerKey) : level(0), nodeCount(0) {
+    SkipListPro(K footerKey) : level(0), nodeCount(0) {
         createList(footerKey);
     }
 
-    ~SkipList() { freeList(); }
+    ~SkipListPro() { freeList(); }
 
     Node<K, V>* search(K key) const;
     bool insert(K key, V value);
@@ -50,7 +50,7 @@ private:
 // }
 
 template<typename K, typename V>
-void SkipList<K, V>::createList(K footerKey) {
+void SkipListPro<K, V>::createList(K footerKey) {
     createNode(0, footer);
     footer->key = footerKey;
     createNode(MAX_LEVEL, header);
@@ -60,19 +60,19 @@ void SkipList<K, V>::createList(K footerKey) {
 }
 
 template<typename K, typename V>
-void SkipList<K, V>::createNode(int level, Node<K, V>*& node) {
+void SkipListPro<K, V>::createNode(int level, Node<K, V>*& node) {
     node = new Node<K, V>();
     node->forward = new Node<K, V>*[level + 1]();
     node->nodeLevel = level;
 }
 
 template<typename K, typename V>
-void SkipList<K, V>::createNode(int level, Node<K, V>*& node, K key, V value) {
+void SkipListPro<K, V>::createNode(int level, Node<K, V>*& node, K key, V value) {
     node = new Node<K, V>(key, value, level);
 }
 
 template<typename K, typename V>
-void SkipList<K, V>::freeList() {
+void SkipListPro<K, V>::freeList() {
     Node<K, V>* p = header;
     while (p != footer) {
         Node<K, V>* next = p->forward[0];
@@ -84,7 +84,7 @@ void SkipList<K, V>::freeList() {
 }
 
 template<typename K, typename V>
-Node<K, V>* SkipList<K, V>::search(K key) const {
+Node<K, V>* SkipListPro<K, V>::search(K key) const {
     std::lock_guard<std::mutex> lock(mtx);
     Node<K, V>* node = header;
     for (int i = level; i >= 0; --i) {
@@ -96,7 +96,7 @@ Node<K, V>* SkipList<K, V>::search(K key) const {
 }
 
 template<typename K, typename V>
-bool SkipList<K, V>::insert(K key, V value) {
+bool SkipListPro<K, V>::insert(K key, V value) {
     std::lock_guard<std::mutex> lock(mtx);
     Node<K, V>* update[MAX_LEVEL + 1];
     Node<K, V>* node = header;
@@ -128,7 +128,7 @@ bool SkipList<K, V>::insert(K key, V value) {
 }
 
 template<typename K, typename V>
-bool SkipList<K, V>::remove(K key, V& value) {
+bool SkipListPro<K, V>::remove(K key, V& value) {
     std::lock_guard<std::mutex> lock(mtx);
     Node<K, V>* update[MAX_LEVEL + 1];
     Node<K, V>* node = header;

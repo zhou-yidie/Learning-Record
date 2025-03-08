@@ -1,73 +1,71 @@
 #include <iostream>
 #include <chrono>
-#include <cstdlib>
-#include <pthread.h>
-#include "SkipList.h"
+#include <thread>
+#include <vector>
+#include "SkipListPro.h"  // 确保包含该头文件
 
-#define NUM_THREADS 1000
-#define TEST_COUNT 100000
-SkipList<int, std::string> skipList(1000000);
+#define NUM_THREADS 4
+#define OPERATIONS 250000
 
-void* insertElement(void* arg) {
-    long tid = (long)arg;
-    int batch = TEST_COUNT / NUM_THREADS;
-    for (int i = tid * batch; i < (tid + 1) * batch; ++i) {
-        skipList.insert(i, "v");
+SkipListPro<int, std::string> skiplist;
+
+// 插入测试函数
+void testInsert(int start) {
+    for (int i = start; i < start + OPERATIONS; ++i) {
+        skiplist.insert(i, "data_" + std::to_string(i));
     }
-    return nullptr;
 }
 
-void* searchElement(void* arg) {
-    long tid = (long)arg;
-    int batch = TEST_COUNT / NUM_THREADS;
-    for (int i = tid * batch; i < (tid + 1) * batch; ++i) {
-        skipList.search(i);
+// 查找测试函数
+void testSearch(int start) {
+    for (int i = start; i < start + OPERATIONS; ++i) {
+        skiplist.search(i);
     }
-    return nullptr;
 }
 
-void* removeElement(void* arg) {
-    long tid = (long)arg;
-    int batch = TEST_COUNT / NUM_THREADS;
-    std::string tmp;
-    for (int i = tid * batch; i < (tid + 1) * batch; ++i) {
-        skipList.remove(i, tmp);
+// 删除测试函数
+void testRemove(int start) {
+    for (int i = start; i < start + OPERATIONS; ++i) {
+        skiplist.remove(i);
     }
-    return nullptr;
 }
 
 int main() {
-    pthread_t threads[NUM_THREADS];
+    std::vector<std::thread> threads;
 
-    // Insert Test
+    // 插入测试
     auto start = std::chrono::high_resolution_clock::now();
-    for (long i = 0; i < NUM_THREADS; ++i)
-        pthread_create(&threads[i], nullptr, insertElement, (void*)i);
-    for (auto& th : threads) pthread_join(th, nullptr);
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::high_resolution_clock::now() - start
-    );
-    std::cout << "Insert time: " << duration.count() << "ms\n";
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        threads.emplace_back(testInsert, i * OPERATIONS);
+    }
+    for (auto& t : threads) t.join();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Insert completed. Time: " << duration.count() 
+              << "ms | Size: " << skiplist.size() << std::endl;
 
-    // Search Test
+    // 查找测试
+    threads.clear();
     start = std::chrono::high_resolution_clock::now();
-    for (long i = 0; i < NUM_THREADS; ++i)
-        pthread_create(&threads[i], nullptr, searchElement, (void*)i);
-    for (auto& th : threads) pthread_join(th, nullptr);
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::high_resolution_clock::now() - start
-    );
-    std::cout << "Search time: " << duration.count() << "ms\n";
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        threads.emplace_back(testSearch, i * OPERATIONS);
+    }
+    for (auto& t : threads) t.join();
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Search completed. Time: " << duration.count() << "ms" << std::endl;
 
-    // Remove Test
+    // 删除测试
+    threads.clear();
     start = std::chrono::high_resolution_clock::now();
-    for (long i = 0; i < NUM_THREADS; ++i)
-        pthread_create(&threads[i], nullptr, removeElement, (void*)i);
-    for (auto& th : threads) pthread_join(th, nullptr);
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::high_resolution_clock::now() - start
-    );
-    std::cout << "Remove time: " << duration.count() << "ms\n";
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        threads.emplace_back(testRemove, i * OPERATIONS);
+    }
+    for (auto& t : threads) t.join();
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Remove completed. Time: " << duration.count() 
+              << "ms | Final Size: " << skiplist.size() << std::endl;
 
     return 0;
 }
