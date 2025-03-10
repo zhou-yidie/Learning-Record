@@ -122,3 +122,151 @@ private:
 // 1. 时间复杂度：访问操作O(logN)（红黑树插入/删除）
 // 2. 空间复杂度：O(C)（C为缓存容量）
 // 3. 淘汰策略：优先淘汰第K次访问时间最早的缓存页面
+
+
+
+/*
+
+#include <unordered_map>
+#include <deque>
+#include <set>
+#include <ctime>
+
+using namespace std;
+
+// 前向声明比较器
+template<typename K>
+struct CacheKeyComparator;
+
+template<typename K>
+class LRUKCache {
+private:
+    // 历史记录条目结构
+    struct HistoryEntry {
+        int access_count;
+        deque<time_t> access_times;
+    };
+
+    // 缓存条目结构
+    struct CacheEntry {
+        deque<time_t> access_times;
+        time_t kth_access_time;
+    };
+
+    int k;                   // 访问次数阈值
+    size_t capacity;         // 缓存容量
+    time_t current_time;     // 模拟时间戳
+
+    // 核心数据结构
+    unordered_map<K, HistoryEntry> history_map;     // 未达标访问记录
+    unordered_map<K, CacheEntry> cache_map;         // 缓存条目存储
+    set<pair<time_t, K>, CacheKeyComparator<K>> cache_tree; // 淘汰顺序索引
+
+public:
+    // 构造函数（需要显式指定比较器）
+    explicit LRUKCache(int k, size_t capacity)
+        : k(k), capacity(capacity), current_time(0),
+          cache_tree(CacheKeyComparator<K>()) {}
+
+    void access(const K& key) {
+        current_time++;
+
+        // 情况1：存在于缓存
+        if (auto cache_it = cache_map.find(key); cache_it != cache_map.end()) {
+            handle_cache_hit(key, cache_it->second);
+            return;
+        }
+
+        // 情况2：存在于历史记录
+        if (auto hist_it = history_map.find(key); hist_it != history_map.end()) {
+            handle_history_update(key, hist_it->second);
+            return;
+        }
+
+        // 情况3：全新键
+        add_new_history_entry(key);
+    }
+
+private:
+    // 缓存命中处理
+    void handle_cache_hit(const K& key, CacheEntry& entry) {
+        // 更新时间队列
+        entry.access_times.push_back(current_time);
+        if (entry.access_times.size() > k) {
+            entry.access_times.pop_front();
+        }
+
+        // 更新淘汰索引
+        time_t old_time = entry.kth_access_time;
+        entry.kth_access_time = entry.access_times.front();
+        
+        cache_tree.erase({old_time, key});
+        cache_tree.insert({entry.kth_access_time, key});
+    }
+
+    // 历史记录更新处理
+    void handle_history_update(const K& key, HistoryEntry& entry) {
+        entry.access_count++;
+        entry.access_times.push_back(current_time);
+
+        if (entry.access_count >= k) {
+            promote_to_cache(key, entry);
+            history_map.erase(key);
+        }
+    }
+
+    // 提升到缓存
+    void promote_to_cache(const K& key, const HistoryEntry& entry) {
+        // 创建缓存条目
+        CacheEntry new_entry;
+        new_entry.access_times = deque<time_t>(
+            entry.access_times.end() - k,
+            entry.access_times.end()
+        );
+        new_entry.kth_access_time = new_entry.access_times.front();
+
+        // 执行淘汰（如果需要）
+        if (cache_map.size() >= capacity) {
+            evict();
+        }
+
+        // 插入新条目
+        cache_map.emplace(key, new_entry);
+        cache_tree.insert({new_entry.kth_access_time, key});
+    }
+
+    // 添加新历史记录
+    void add_new_history_entry(const K& key) {
+        history_map[key] = {1, {current_time}};
+    }
+
+    // 淘汰机制
+    void evict() {
+        if (!cache_tree.empty()) {
+            auto it = cache_tree.begin();
+            cache_map.erase(it->second);
+            cache_tree.erase(it);
+        }
+    }
+};
+
+// 自定义比较器（需前向声明）
+template<typename K>
+struct CacheKeyComparator {
+    bool operator()(const pair<time_t, K>& a, const pair<time_t, K>& b) const {
+        // 优先比较时间戳，其次比较键本身
+        return (a.first != b.first) ? (a.first < b.first) : (a.second < b.second);
+    }
+};
+
+// 模板特化说明：
+// 1. 键类型K需要满足：
+//   - 可哈希（用于unordered_map）
+//   - 可比较（用于set中的排序）
+//   - 可拷贝构造（存储在pair中）
+// 2. 时间戳仍使用time_t类型保持简单性
+// 3. 比较器确保相同时间戳的不同键能正确排序
+
+
+
+*/
