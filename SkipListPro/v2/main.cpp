@@ -1,71 +1,55 @@
+#include "SkipListPro.h"
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include <chrono>
-#include <thread>
-#include <vector>
-#include "SkipListPro.h"  // 确保包含该头文件
-
-#define NUM_THREADS 4
-#define OPERATIONS 250000
-
-SkipListPro<int, std::string> skiplist;
-
-// 插入测试函数
-void testInsert(int start) {
-    for (int i = start; i < start + OPERATIONS; ++i) {
-        skiplist.insert(i, "data_" + std::to_string(i));
-    }
-}
-
-// 查找测试函数
-void testSearch(int start) {
-    for (int i = start; i < start + OPERATIONS; ++i) {
-        skiplist.search(i);
-    }
-}
-
-// 删除测试函数
-void testRemove(int start) {
-    for (int i = start; i < start + OPERATIONS; ++i) {
-        skiplist.remove(i);
-    }
-}
+#include <string>
 
 int main() {
-    std::vector<std::thread> threads;
-
-    // 插入测试
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        threads.emplace_back(testInsert, i * OPERATIONS);
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    
+    // 创建一个跳表实例，最大索引层数设为 16（即总层数 17）
+    SkipList<int, std::string> skiplist(16);
+    
+    // 插入 50 个元素
+    for (int i = 1; i <= 50; i++) {
+        skiplist.insert_element(i, "val" + std::to_string(i));
     }
-    for (auto& t : threads) t.join();
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Insert completed. Time: " << duration.count() 
-              << "ms | Size: " << skiplist.size() << std::endl;
-
-    // 查找测试
-    threads.clear();
-    start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        threads.emplace_back(testSearch, i * OPERATIONS);
+    std::cout << "跳表插入后结构：" << std::endl;
+    skiplist.display_list();
+    
+    // 调用重平衡检查函数
+    skiplist.rebalance();
+    std::cout << "\n重平衡后结构：" << std::endl;
+    skiplist.display_list();
+    
+    // 测试查找功能
+    std::string value;
+    if (skiplist.search_element(25, value)) {
+        std::cout << "\n搜索到 key 25, value: " << value << std::endl;
+    } else {
+        std::cout << "\n未搜索到 key 25" << std::endl;
     }
-    for (auto& t : threads) t.join();
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Search completed. Time: " << duration.count() << "ms" << std::endl;
-
-    // 删除测试
-    threads.clear();
-    start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        threads.emplace_back(testRemove, i * OPERATIONS);
+    
+    // 测试删除功能
+    skiplist.delete_element(25);
+    std::cout << "\n删除 key 25 后结构：" << std::endl;
+    skiplist.display_list();
+    
+    // 性能测试：插入大量数据并调用重平衡
+    SkipList<int, std::string> largeSkipList(16);
+    const int N = 100000;
+    auto start = std::chrono::steady_clock::now();
+    for (int i = 1; i <= N; i++) {
+        largeSkipList.insert_element(i, "val" + std::to_string(i));
     }
-    for (auto& t : threads) t.join();
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Remove completed. Time: " << duration.count() 
-              << "ms | Final Size: " << skiplist.size() << std::endl;
-
+    auto mid = std::chrono::steady_clock::now();
+    largeSkipList.rebalance();
+    auto end = std::chrono::steady_clock::now();
+    std::chrono::duration<double> insertTime = mid - start;
+    std::chrono::duration<double> rebalanceTime = end - mid;
+    std::cout << "\n插入 " << N << " 个元素耗时: " << insertTime.count() << " 秒" << std::endl;
+    std::cout << "重平衡耗时: " << rebalanceTime.count() << " 秒" << std::endl;
+    
     return 0;
 }
