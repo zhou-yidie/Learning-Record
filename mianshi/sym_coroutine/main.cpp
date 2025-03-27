@@ -1,79 +1,102 @@
-#include <ucontext.h>
+#include "fiber.h"
 #include <iostream>
-#include <cstdlib>
+#include <memory>
+#include <vector>
+#include <chrono>
+#include <thread>
 
-constexpr int STACK_SIZE = 64 * 1024; // 64KB 栈空间
+using namespace sylar;
 
-struct Coroutine {
-    ucontext_t context;
-    char* stack;
-    void (*func)(Coroutine*);
-    int id;
-    bool finished;
-    Coroutine* other; // 指向另一个协程
-};
+// 测试参数
+const int NUM_FIBERS = 3;
+const int ITERATIONS = 3;
 
-ucontext_t main_context;
-Coroutine* current = nullptr;
+// -------------------------------
+// 对称调度测试（Fiber 间直接切换）
+// -------------------------------
+std::vector<Fiber::ptr> sym_fibers;
 
-// 协程切换函数
-void yield(Coroutine* target) {
-    Coroutine* prev = current;
-    current = target;
-    swapcontext(&prev->context, &target->context);
-}
-
-// 协程入口函数
-static void coroutine_entry(Coroutine* self) {
-    self->func(self);      // 执行用户定义的协程函数
-    self->finished = true; // 标记协程执行完成
-}
-
-// 初始化协程
-void create_coroutine(Coroutine* co, void (*func)(Coroutine*), 
-                      int id, Coroutine* other) {
-    co->stack = new char[STACK_SIZE];
-    getcontext(&co->context);
-    co->context.uc_stack.ss_sp = co->stack;
-    co->context.uc_stack.ss_size = STACK_SIZE;
-    co->context.uc_link = &main_context; // 执行完后返回主上下文
-    makecontext(&co->context, (void(*)())coroutine_entry, 1, co);
-    co->func = func;
-    co->id = id;
-    co->finished = false;
-    co->other = other;
-}
-
-// 示例协程函数
-void coroutine_func(Coroutine* self) {
-    for (int i = 0; i < 3; ++i) {
-        std::cout << "Coroutine " << self->id 
-                  << " running (" << i + 1 << ")\n";
-        yield(self->other); // 切换到另一个协程
+void symmetricFiberFunc(int id) {
+    for (int i = 0; i < ITERATIONS; ++i) {
+        std::cout << "[Symmetric Fiber " << id << "] iteration " << i << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        // 计算下一个 Fiber 的 id，形成循环
+        int next = (id + 1) % NUM_FIBERS;
+        // 如果下一个 Fiber 尚未结束，则直接切换到它；否则退回主上下文
+        if (sym_fibers[next] && !sym_fibers[next]->isFinished()) {
+            Fiber::GetThis()->yieldTo(sym_fibers[next].get());
+        } else {
+            Fiber::GetThis()->yieldToMain();
+        }
     }
+    std::cout << "[Symmetric Fiber " << id << "] completed" << std::endl;
+    // 结束后退回主上下文
+    Fiber::GetThis()->yieldToMain();
+}
+
+void runSymmetricTest() {
+    std::cout << "=== Running Symmetric Scheduling Test ===" << std::endl;
+    sym_fibers.clear();
+    // 创建 Fiber 实例，每个 Fiber 执行 symmetricFiberFunc，传入对应 id
+    for (int i = 0; i < NUM_FIBERS; ++i) {
+        sym_fibers.push_back(std::make_shared<Fiber>([i](){
+            symmetricFiberFunc(i);
+        }));
+    }
+    // 在主调度器中保存主上下文（使用 sylar::g_main_ctx）
+    getcontext(&sylar::g_main_ctx);
+    // 由主启动第 0 个 Fiber
+    sym_fibers[0]->resume();
+    std::cout << "=== Symmetric Test Completed ===" << std::endl;
+}
+
+// -------------------------------
+// 非对称调度测试（每次 Fiber 执行后主动退回主，由主统一恢复）
+// -------------------------------
+std::vector<Fiber::ptr> asym_fibers;
+
+void asymmetricFiberFunc(int id) {
+    for (int i = 0; i < ITERATIONS; ++i) {
+        std::cout << "[Asymmetric Fiber " << id << "] iteration " << i << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        // 退回主上下文
+        Fiber::GetThis()->yieldToMain();
+    }
+    std::cout << "[Asymmetric Fiber " << id << "] completed" << std::endl;
+    Fiber::GetThis()->yieldToMain();
+}
+
+void runAsymmetricTest() {
+    std::cout << "\n=== Running Asymmetric Scheduling Test ===" << std::endl;
+    asym_fibers.clear();
+    for (int i = 0; i < NUM_FIBERS; ++i) {
+        asym_fibers.push_back(std::make_shared<Fiber>([i](){
+            asymmetricFiberFunc(i);
+        }));
+    }
+    // 在主调度器中保存主上下文（使用 sylar::g_main_ctx）
+    getcontext(&sylar::g_main_ctx);
+    bool allFinished = false;
+    // 主调度器循环恢复各 Fiber
+    while (!allFinished) {
+        allFinished = true;
+        for (int i = 0; i < NUM_FIBERS; ++i) {
+            if (!asym_fibers[i]->isFinished()) {
+                allFinished = false;
+                std::cout << "Main: Resuming Asymmetric Fiber " << i << std::endl;
+                asym_fibers[i]->resume();
+            }
+        }
+    }
+    std::cout << "=== Asymmetric Test Completed ===" << std::endl;
 }
 
 int main() {
-    Coroutine co1, co2;
+    // 执行对称调度测试：Fiber 间直接切换
+    runSymmetricTest();
+    // 执行非对称调度测试：每次 Fiber 执行后退回主，由主统一恢复
+    runAsymmetricTest();
     
-    // 创建两个互相指向的协程
-    create_coroutine(&co1, coroutine_func, 1, &co2);
-    create_coroutine(&co2, coroutine_func, 2, &co1);
-
-    // 保存主上下文
-    getcontext(&main_context);
-
-    if (!current) {
-        current = &co1; // 启动第一个协程
-        swapcontext(&main_context, &co1.context);
-    }
-
-    // 当所有协程执行完毕返回主上下文
-    std::cout << "All coroutines completed.\n";
-    
-    // 清理资源
-    delete[] co1.stack;
-    delete[] co2.stack;
-
+    std::cout << "\nMain: All tests completed." << std::endl;
     return 0;
 }
