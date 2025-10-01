@@ -1,0 +1,8 @@
+# 分辨率设置服务请求
+int32 width       # 宽度，如1920
+int32 height      # 高度，如1080
+
+---
+# 分辨率设置服务响应
+bool success      # 执行结果
+string message    # 消息描述

@@ -1,0 +1,8 @@
+# 云台控制服务请求
+string direction  # 方向: "left", "right", "up", "down"
+int32 speed       # 速度: 1-10
+
+---
+# 云台控制服务响应
+bool success      # 执行结果
+string message    # 消息描述
